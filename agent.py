@@ -44,6 +44,10 @@ def _parse_query(query: str) -> dict:
         "Extract search parameters from this clothing query. "
         'Return ONLY valid JSON with three fields: "description" (str), '
         '"size" (str or null), "max_price" (float or null).\n\n'
+        "For size, normalize to a standard abbreviation. Letter sizes follow the pattern "
+        "XXS, XS, S, M, L, XL, XXL, 3XL, 4XL, etc. — map written-out words to the correct "
+        "abbreviation (e.g. 'medium' → 'M', 'triple extra large' → '3XL', 'quadruple xl' → '4XL'). "
+        "Numeric sizes use formats like W30, US 8. If no size is mentioned, use null.\n\n"
         f'Query: "{query}"\n\nReturn only JSON, no explanation.'
     )
     response = client.chat.completions.create(
