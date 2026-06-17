@@ -13,6 +13,7 @@ Tools:
 """
 
 import os
+import re
 
 from dotenv import load_dotenv
 from groq import Groq
@@ -69,8 +70,34 @@ def search_listings(
 
     Before writing code, fill in the Tool 1 section of planning.md.
     """
-    # Replace this with your implementation
-    return []
+    listings = load_listings()
+
+    if max_price is not None:
+        listings = [l for l in listings if l["price"] <= max_price]
+
+    if size is not None:
+        def _size_matches(query: str, listing_size: str) -> bool:
+            tokens = re.split(r'[\s/(),]+', listing_size.upper())
+            return query.upper() in tokens
+        listings = [l for l in listings if _size_matches(size, l["size"])]
+
+    keywords = description.lower().split()
+    scored = []
+    for listing in listings:
+        searchable = " ".join([
+            listing.get("title", ""),
+            listing.get("description", ""),
+            listing.get("category", ""),
+            listing.get("brand") or "",
+            " ".join(listing.get("style_tags", [])),
+            " ".join(listing.get("colors", [])),
+        ]).lower()
+        score = sum(1 for kw in keywords if kw in searchable)
+        if score > 0:
+            scored.append((score, listing))
+
+    scored.sort(key=lambda x: x[0], reverse=True)
+    return [listing for _, listing in scored]
 
 
 # ── Tool 2: suggest_outfit ────────────────────────────────────────────────────
@@ -100,8 +127,37 @@ def suggest_outfit(new_item: dict, wardrobe: dict) -> str:
 
     Before writing code, fill in the Tool 2 section of planning.md.
     """
-    # Replace this with your implementation
-    return ""
+    client = _get_groq_client()
+    item_desc = (
+        f"{new_item['title']} — {new_item['category']}, "
+        f"colors: {', '.join(new_item.get('colors', []))}, "
+        f"style: {', '.join(new_item.get('style_tags', []))}"
+    )
+
+    if not wardrobe.get("items"):
+        prompt = (
+            f"You are a fashion stylist. A user is considering buying this thrifted item:\n{item_desc}\n\n"
+            "They haven't shared their wardrobe. Suggest 1-2 general outfit ideas: what types of pieces "
+            "pair well with it and what vibe it suits. Be specific and practical."
+        )
+    else:
+        wardrobe_lines = "\n".join(
+            f"- {item['name']} ({item['category']}, {', '.join(item.get('colors', []))})"
+            for item in wardrobe["items"]
+        )
+        prompt = (
+            f"You are a fashion stylist. A user is considering buying this thrifted item:\n{item_desc}\n\n"
+            f"Their current wardrobe includes:\n{wardrobe_lines}\n\n"
+            "Suggest 1-2 complete outfit combinations using this new item with specific named pieces "
+            "from their wardrobe. Be specific about which pieces to combine and the overall look."
+        )
+
+    response = client.chat.completions.create(
+        model="llama-3.3-70b-versatile",
+        messages=[{"role": "user", "content": prompt}],
+        temperature=0.7,
+    )
+    return response.choices[0].message.content
 
 
 # ── Tool 3: create_fit_card ───────────────────────────────────────────────────
@@ -133,5 +189,24 @@ def create_fit_card(outfit: str, new_item: dict) -> str:
 
     Before writing code, fill in the Tool 3 section of planning.md.
     """
-    # Replace this with your implementation
-    return ""
+    if not outfit or not outfit.strip():
+        return "Error: outfit description is missing or empty — cannot generate a fit card."
+
+    client = _get_groq_client()
+    price = int(new_item['price']) if new_item['price'] == int(new_item['price']) else new_item['price']
+    prompt = (
+        f"Write a 2-4 sentence Instagram caption in the style of a real OOTD post. "
+        "Be casual, personal, and specific about the vibe — like you're texting a friend, not reviewing a product. "
+        "Lowercase is fine. Emoji are welcome. Do NOT open with the item name or price. "
+        "Weave in the thrift find, what it cost, and where you got it naturally within the caption.\n\n"
+        f"Thrifted item: {new_item['title']} (${price} from {new_item['platform']})\n"
+        f"Outfit: {outfit}\n\n"
+        "Write only the caption, nothing else."
+    )
+
+    response = client.chat.completions.create(
+        model="llama-3.3-70b-versatile",
+        messages=[{"role": "user", "content": prompt}],
+        temperature=1.0,
+    )
+    return response.choices[0].message.content
