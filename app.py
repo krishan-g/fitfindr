@@ -43,8 +43,6 @@ def handle_query(user_query: str, wardrobe_choice: str) -> tuple[str, str, str]:
            string and return it along with session["outfit_suggestion"] and
            session["fit_card"].
     """
-    # TODO: implement this function
-
     if not user_query or not user_query.strip():
         return "Error: query is empty or whitespace-only.", "", ""
 

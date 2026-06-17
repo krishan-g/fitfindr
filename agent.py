@@ -30,6 +30,12 @@ from tools import create_fit_card, search_listings, suggest_outfit
 load_dotenv()
 
 
+def _trace(step: str, detail: str = "") -> None:
+    print(f"\n[AGENT] {step}")
+    if detail:
+        print(f"        {detail}")
+
+
 def _get_groq_client() -> Groq:
     api_key = os.environ.get("GROQ_API_KEY")
     if not api_key:
@@ -140,39 +146,50 @@ def run_agent(query: str, wardrobe: dict) -> dict:
     """
     # Step 1: Initialize session
     session = _new_session(query, wardrobe)
+    _trace("Query received", f'"{query}"')
 
     # Step 2: Parse query with LLM
     session["parsed"] = _parse_query(query)
     description = session["parsed"]["description"]
     size = session["parsed"]["size"]
     max_price = session["parsed"]["max_price"]
+    _trace("Query parsed", f"description={description!r}  size={size!r}  max_price={max_price!r}")
 
     # Step 3: Search listings — return early if nothing matches
+    _trace("Calling search_listings", f"description={description!r}  size={size!r}  max_price={max_price!r}")
     session["search_results"] = search_listings(description, size=size, max_price=max_price)
     if not session["search_results"]:
+        _trace("search_listings returned no results — returning early")
         session["error"] = (
             "No listings found matching your search. Try loosening your requirements — "
             "for example, remove the size filter or increase your price limit (if applicable). "
             "Otherwise, try a different search term."
         )
         return session
+    _trace("search_listings results", f"{len(session['search_results'])} match(es) found")
 
     # Step 4: Select top result
     session["selected_item"] = session["search_results"][0]
+    _trace("Selected top item", f"\"{session['selected_item']['title']}\" — ${session['selected_item']['price']} on {session['selected_item']['platform']}")
 
     # Step 5: Suggest outfit
+    _trace("Calling suggest_outfit", f"new_item={session['selected_item']['title']!r}  wardrobe={len(wardrobe.get('items', []))} item(s)")
     session["outfit_suggestion"] = suggest_outfit(
         new_item=session["selected_item"],
         wardrobe=wardrobe,
     )
+    _trace("suggest_outfit returned", f"{len(session['outfit_suggestion'])} chars")
 
     # Step 6: Create fit card
+    _trace("Calling create_fit_card", f"outfit={session['outfit_suggestion'][:60]!r}...")
     session["fit_card"] = create_fit_card(
         outfit=session["outfit_suggestion"],
         new_item=session["selected_item"],
     )
+    _trace("create_fit_card returned", f"{len(session['fit_card'])} chars")
 
     # Step 7: Return session
+    _trace("Done — returning session")
     return session
 
 
