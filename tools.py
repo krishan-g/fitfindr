@@ -152,11 +152,14 @@ def suggest_outfit(new_item: dict, wardrobe: dict) -> str:
             "from their wardrobe. Be specific about which pieces to combine and the overall look."
         )
 
-    response = client.chat.completions.create(
-        model="llama-3.3-70b-versatile",
-        messages=[{"role": "user", "content": prompt}],
-        temperature=0.7,
-    )
+    try:
+        response = client.chat.completions.create(
+            model="llama-3.3-70b-versatile",
+            messages=[{"role": "user", "content": prompt}],
+            temperature=0.7,
+        )
+    except Exception:
+        return "Couldn't generate outfit suggestions right now — the styling service is unavailable. Try again in a moment."
     return response.choices[0].message.content
 
 
@@ -204,9 +207,12 @@ def create_fit_card(outfit: str, new_item: dict) -> str:
         "Write only the caption, nothing else."
     )
 
-    response = client.chat.completions.create(
-        model="llama-3.3-70b-versatile",
-        messages=[{"role": "user", "content": prompt}],
-        temperature=1.0,
-    )
+    try:
+        response = client.chat.completions.create(
+            model="llama-3.3-70b-versatile",
+            messages=[{"role": "user", "content": prompt}],
+            temperature=1.0,
+        )
+    except Exception:
+        return "Couldn't generate a fit card caption right now — the styling service is unavailable. Try again in a moment."
     return response.choices[0].message.content

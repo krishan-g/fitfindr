@@ -56,11 +56,14 @@ def _parse_query(query: str) -> dict:
         "Numeric sizes use formats like W30, US 8. If no size is mentioned, use null.\n\n"
         f'Query: "{query}"\n\nReturn only JSON, no explanation.'
     )
-    response = client.chat.completions.create(
-        model="llama-3.3-70b-versatile",
-        messages=[{"role": "user", "content": prompt}],
-        temperature=0,
-    )
+    try:
+        response = client.chat.completions.create(
+            model="llama-3.3-70b-versatile",
+            messages=[{"role": "user", "content": prompt}],
+            temperature=0,
+        )
+    except Exception:
+        return {"description": query, "size": None, "max_price": None}
     raw = re.sub(r"```(?:json)?\s*|\s*```", "", response.choices[0].message.content).strip()
     try:
         parsed = json.loads(raw)
