@@ -154,7 +154,7 @@ def suggest_outfit(new_item: dict, wardrobe: dict) -> str:
 
     try:
         response = client.chat.completions.create(
-            model="llama-3.3-70b-versatile",
+            model="openai/gpt-oss-120b",
             messages=[{"role": "user", "content": prompt}],
             temperature=0.7,
         )
@@ -209,7 +209,7 @@ def create_fit_card(outfit: str, new_item: dict) -> str:
 
     try:
         response = client.chat.completions.create(
-            model="llama-3.3-70b-versatile",
+            model="openai/gpt-oss-120b",
             messages=[{"role": "user", "content": prompt}],
             temperature=1.0,
         )
