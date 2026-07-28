@@ -1,11 +1,13 @@
 # FitFindr
 
+![tests](https://github.com/krishan-g/fitfindr/actions/workflows/tests.yml/badge.svg)
+
 FitFindr is an AI agent that helps users find secondhand clothing and style it. Given a natural language query, it searches a mock thrift dataset, suggests outfit combinations using the user's wardrobe, and generates a shareable fit card caption.
 
 ## What's Included
 
 ```
-ai201-project2-fitfindr-starter/
+fitfindr/
 ├── data/
 │   ├── listings.json          # 40 mock secondhand listings
 │   └── wardrobe_schema.json   # Wardrobe format + example wardrobe

@@ -193,10 +193,10 @@ Planning Loop ──────────────────────
      search_listings() using load_listings() from the data loader — then test it against 3 queries
      before trusting it" is a plan. -->
 
-**Milestone 3 — Individual tool implementations:**
+**Individual tool implementations:**
 I will use Claude, giving it one tool at a time: the relevant tool block from the ## Tools section (inputs, return value, failure mode) plus the corresponding row from the ## Error Handling table, along with the TODO steps already in the `tools.py` stub. I expect it to produce a working function that filters correctly, calls the LLM where needed, and handles its failure mode without raising an exception. To verify each tool before moving on, I will run three specific test cases: (1) a query that should return results to confirm the happy path, (2) an impossible query that should return an empty list or empty string to confirm the failure mode, and (3) a filtered query (e.g. price cap or size) to confirm the filters are applied correctly. For `suggest_outfit` and `create_fit_card`, I will also check that the LLM output varies across runs to confirm temperature is set appropriately.
 
-**Milestone 4 — Planning loop and state management:**
+**Planning loop and state management:**
 I will use Claude, giving it the ## Planning Loop section, the ## State Management section, the ## Architecture diagram, and the ## A Complete Interaction (Step by Step) section from this file, along with the `agent.py` stub. I expect it to produce a `run_agent()` function that initializes the session, parses the query, calls each tool in order, stores results in the correct session fields, and returns early if `search_listings` returns an empty list. To verify against the spec, I will print `session["selected_item"]` and confirm it matches the dict passed into `suggest_outfit`, print `session["outfit_suggestion"]` and confirm it matches what went into `create_fit_card`, and run the impossible query test case to confirm `session["fit_card"]` and `session["outfit_suggestion"]` remain `None` when no results are found.
 
 ---
